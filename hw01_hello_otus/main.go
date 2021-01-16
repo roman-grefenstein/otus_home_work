@@ -8,5 +8,5 @@ import (
 
 func main() {
 	str := "Hello, OTUS!"
-	fmt.Print(stringutil.Reverse(str))
+	fmt.Print(stringutil.Reverse(str)) //nolint:forbidigo
 }
