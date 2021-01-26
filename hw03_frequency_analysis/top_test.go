@@ -58,3 +58,25 @@ func TestTop10(t *testing.T) {
 		}
 	})
 }
+
+func TestTopN(t *testing.T) {
+	tests := []struct {
+		reqString string
+		reqN      int
+		expected  []string
+	}{
+		{"aaa aa a aa aaa", 2, []string{"aaa", "aa"}},
+		{"Aaa Aa a aa aaa", 2, []string{"Aaa", "Aa", "a", "aa", "aaa"}},
+		{"Lorem Lorem Lorem", 100500, []string{"Lorem"}},
+		{"Lorem Lorem Lorem", 0, []string{}},
+		{"👍👍 👍👍 👌👌 👍 👌", 1, []string{"👍👍"}},
+		{text, 1, []string{"он"}},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.reqString, func(t *testing.T) {
+			require.Subset(t, tc.expected, TopN(tc.reqString, tc.reqN))
+		})
+	}
+}
