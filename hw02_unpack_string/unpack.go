@@ -18,7 +18,7 @@ func Unpack(str string) (string, error) {
 		}
 
 		if unicode.IsDigit(char) {
-			num, err := strconv.Atoi(string(str[i]))
+			num, err := strconv.Atoi(string(char))
 			if err != nil {
 				return "", errors.New("atoi error")
 			}
@@ -28,7 +28,7 @@ func Unpack(str string) (string, error) {
 				result.WriteString(string(prevChar))
 			}
 			if i == len(str)-1 {
-				result.WriteString(string(str[i]))
+				result.WriteString(string(char))
 			}
 		}
 
