@@ -1,9 +1,6 @@
 package hw04_lru_cache //nolint:golint,stylecheck
 
 import (
-	"math/rand"
-	"strconv"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -50,30 +47,65 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		c := NewCache(10)
+
+		wasInCache := c.Set("aaa", 100)
+		require.False(t, wasInCache)
+
+		wasInCache = c.Set("bbb", "ccc")
+		require.False(t, wasInCache)
+
+		val, ok := c.Get("aaa")
+		require.True(t, ok)
+		require.Equal(t, 100, val)
+
+		val, ok = c.Get("bbb")
+		require.True(t, ok)
+		require.Equal(t, "ccc", val)
+
+		c.Clear()
+
+		_, ok = c.Get("aaa")
+		require.False(t, ok)
+
+		_, ok = c.Get("bbb")
+		require.False(t, ok)
 	})
-}
 
-func TestCacheMultithreading(t *testing.T) {
-	t.Skip() // NeedRemove if task with asterisk completed
+	t.Run("not simple", func(t *testing.T) {
+		c := NewCache(3)
 
-	c := NewCache(10)
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
+		wasInCache := c.Set("a", "aaa") // {a:ааа}
+		require.False(t, wasInCache)
 
-	go func() {
-		defer wg.Done()
-		for i := 0; i < 1_000_000; i++ {
-			c.Set(Key(strconv.Itoa(i)), i)
-		}
-	}()
+		wasInCache = c.Set("b", "bbb") // {b:bbb a:ааа}
+		require.False(t, wasInCache)
 
-	go func() {
-		defer wg.Done()
-		for i := 0; i < 1_000_000; i++ {
-			c.Get(Key(strconv.Itoa(rand.Intn(1_000_000))))
-		}
-	}()
+		wasInCache = c.Set("c", "ccc") // {c:ccc b:bbb a:ааа}
+		require.False(t, wasInCache)
 
-	wg.Wait()
+		wasInCache = c.Set("d", "ddd") // {d:ddd c:ccc b:bbb}
+		require.False(t, wasInCache)
+
+		val, ok := c.Get("a") // {d:ddd c:ccc b:bbb}
+		require.False(t, ok)
+		require.Nil(t, val)
+
+		val, ok = c.Get("b") // {b:bbb d:ddd c:ccc}
+		require.True(t, ok)
+		require.Equal(t, "bbb", val)
+
+		wasInCache = c.Set("c", "c") // {c:c b:bbb ddd:400}
+		require.True(t, wasInCache)
+
+		wasInCache = c.Set("b", "b") // {b:b c:c ddd:400}
+		require.True(t, wasInCache)
+
+		wasInCache = c.Set("a", "a") // {a:а b:b c:c}
+		require.False(t, wasInCache)
+
+		val, ok = c.Get("d")
+		require.False(t, ok)
+		require.Nil(t, val)
+	})
 }
