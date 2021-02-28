@@ -1,4 +1,5 @@
 package hw04_lru_cache //nolint:golint,stylecheck
+import "log"
 
 type Key string
 
@@ -55,6 +56,9 @@ func (l *lruCache) Clear() {
 }
 
 func NewCache(capacity int) Cache {
+	if capacity <= 0 {
+		log.Fatal("cache capacity must be more than 0")
+	}
 	return &lruCache{
 		capacity: capacity,
 		queue:    NewList(),
