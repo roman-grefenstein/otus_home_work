@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -35,7 +36,7 @@ func ReadDir(dir string) (Environment, error) {
 			continue
 		}
 
-		f, err := os.Open(dir + "/" + file.Name())
+		f, err := os.Open(path.Join(dir, file.Name()))
 		if err != nil {
 			return nil, err
 		}
