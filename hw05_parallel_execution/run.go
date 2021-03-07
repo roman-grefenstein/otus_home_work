@@ -8,21 +8,18 @@ import (
 
 var (
 	ErrErrorsLimitExceeded    = errors.New("errors limit exceeded")
-	ErrInvalidGoroutinesCount = errors.New("goroutines count must be greater than zero")
-	ErrInvalidErrorsCount     = errors.New("errors count must be greater than or equal to zero")
+	errInvalidGoroutinesCount = errors.New("goroutines count must be greater than zero")
 	countErrors               int32
 )
 
 type Task func() error
 
-// Run starts tasks in N goroutines and stops its work when receiving M errors from tasks.
+// Run starts tasks in `n` goroutines and stops its work when receiving `m` errors from tasks.
 func Run(tasks []Task, n, m int) error {
 	if n <= 0 {
-		return ErrInvalidGoroutinesCount
+		return errInvalidGoroutinesCount
 	}
-	if m <= 0 {
-		return ErrInvalidErrorsCount
-	}
+
 	countErrors = 0
 	taskCh := make(chan Task, len(tasks))
 	for _, task := range tasks {
@@ -33,14 +30,14 @@ func Run(tasks []Task, n, m int) error {
 	var wg sync.WaitGroup
 	for i := 0; i < n; i++ {
 		wg.Add(1)
-		go func(<-chan Task, int32) {
+		go func(int32) {
 			defer wg.Done()
 			consume(taskCh, int32(m))
-		}(taskCh, int32(m))
+		}(int32(m))
 	}
 	wg.Wait()
 
-	if countErrors >= int32(m) {
+	if maxErrorReached(int32(m)) {
 		return ErrErrorsLimitExceeded
 	}
 
@@ -49,7 +46,7 @@ func Run(tasks []Task, n, m int) error {
 
 func consume(jobs <-chan Task, maxCountErr int32) {
 	for task := range jobs {
-		if atomic.LoadInt32(&countErrors) >= maxCountErr {
+		if maxErrorReached(maxCountErr) {
 			return
 		}
 
@@ -59,8 +56,12 @@ func consume(jobs <-chan Task, maxCountErr int32) {
 		}
 
 		atomic.AddInt32(&countErrors, 1)
-		if atomic.LoadInt32(&countErrors) >= maxCountErr {
+		if maxErrorReached(maxCountErr) {
 			return
 		}
 	}
+}
+
+func maxErrorReached(maxCountErr int32) bool {
+	return maxCountErr > 0 && atomic.LoadInt32(&countErrors) >= maxCountErr
 }
