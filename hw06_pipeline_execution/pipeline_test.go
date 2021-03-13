@@ -90,4 +90,12 @@ func TestPipeline(t *testing.T) {
 		require.Len(t, result, 0)
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
 	})
+
+	t.Run("nil input", func(t *testing.T) {
+		done := make(Bi)
+		s := ExecutePipeline(nil, done, stages...)
+		val, ok := <-s
+		require.False(t, ok)
+		require.Nil(t, val)
+	})
 }
