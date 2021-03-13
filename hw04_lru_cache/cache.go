@@ -1,5 +1,7 @@
 package hw04_lru_cache //nolint:golint,stylecheck
-import "log"
+import (
+	"fmt"
+)
 
 type Key string
 
@@ -55,13 +57,13 @@ func (l *lruCache) Clear() {
 	l.items = make(map[Key]*ListItem, l.capacity)
 }
 
-func NewCache(capacity int) Cache {
+func NewCache(capacity int) (Cache, error) {
 	if capacity <= 0 {
-		log.Fatal("cache capacity must be more than 0")
+		return nil, fmt.Errorf("cache capacity must be more than 0")
 	}
 	return &lruCache{
 		capacity: capacity,
 		queue:    NewList(),
 		items:    make(map[Key]*ListItem, capacity),
-	}
+	}, nil
 }

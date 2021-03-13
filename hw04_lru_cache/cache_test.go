@@ -1,6 +1,7 @@
 package hw04_lru_cache //nolint:golint,stylecheck
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,7 +9,9 @@ import (
 
 func TestCache(t *testing.T) {
 	t.Run("empty cache", func(t *testing.T) {
-		c := NewCache(10)
+		c, err := NewCache(10)
+
+		require.Nil(t, err)
 
 		_, ok := c.Get("aaa")
 		require.False(t, ok)
@@ -18,7 +21,9 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("simple", func(t *testing.T) {
-		c := NewCache(5)
+		c, err := NewCache(5)
+
+		require.Nil(t, err)
 
 		wasInCache := c.Set("aaa", 100)
 		require.False(t, wasInCache)
@@ -47,7 +52,9 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		c := NewCache(10)
+		c, err := NewCache(10)
+
+		require.Nil(t, err)
 
 		wasInCache := c.Set("aaa", 100)
 		require.False(t, wasInCache)
@@ -73,7 +80,9 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("not simple", func(t *testing.T) {
-		c := NewCache(3)
+		c, err := NewCache(3)
+
+		require.Nil(t, err)
 
 		wasInCache := c.Set("a", "aaa") // {a:ааа}
 		require.False(t, wasInCache)
@@ -107,5 +116,19 @@ func TestCache(t *testing.T) {
 		val, ok = c.Get("d")
 		require.False(t, ok)
 		require.Nil(t, val)
+	})
+
+	t.Run("return error", func(t *testing.T) {
+		invalidCapacities := []int{0, -5}
+
+		for _, tc := range invalidCapacities {
+			tc := tc
+			t.Run(strconv.Itoa(tc), func(t *testing.T) {
+				c, err := NewCache(tc)
+
+				require.NotNil(t, err)
+				require.Nil(t, c)
+			})
+		}
 	})
 }
